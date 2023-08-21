@@ -1,9 +1,13 @@
 ﻿using System;
+using System.collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+
 
 /// <summary>
 /// Summary description for Class1
 /// </summary>
-public class Class1
+namespace Market.Shared.Entities
 {
 	public Class Country
 	{
