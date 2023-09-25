@@ -1,0 +1,100 @@
+﻿@page "/cities"
+@using Market.Shared.Entities;
+@using Market.WEB.Repositories;
+
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService swal
+
+
+<h3>Ciudades</h3>
+
+<div class="mb-3">
+    <a class="btn btn-primary" href="/cities/create">Nueva Ciudad</a>
+</div>
+
+<GenericList MyList="Cities">
+
+    <Body>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Ciudad</th>
+                    <th></th>
+
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var city in Cities!)
+                {
+                    <tr>
+                        <td>
+                            @city.Name
+                        </td>
+                        <td>
+                            <a href="/cities/edit/@city.Id" class="btn btn-warning">Editar</a>
+                            <button class="btn btn-danger" @onclick=@(() => Delete(city))>Borrar</button>
+
+                        </td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </Body>
+
+</GenericList>
+
+@code {
+    public List<City>? Cities { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        var responseHppt = await repository.Get<List<City>>("api/cities");
+        Cities = responseHppt.Response!;
+    }
+
+    private async Task Delete(City city)
+    {
+        var result = await swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmación",
+                Text = "¿Esta seguro que quieres borrar el registro?",
+                Icon = SweetAlertIcon.Question,
+                ShowCancelButton = true
+            });
+
+        var confirm = string.IsNullOrEmpty(result.Value);
+
+        if (confirm)
+        {
+            return;
+        }
+
+        var responseHTTP = await repository.Delete($"api/countries/{city.Id}");
+
+        if (responseHTTP.Error)
+        {
+            if (responseHTTP.HttpResponseMessage.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                navigationManager.NavigateTo("/");
+            }
+            else
+            {
+                var mensajeError = await responseHTTP.GetErrorMessageAsync();
+                await swal.FireAsync("Error", mensajeError, SweetAlertIcon.Error);
+            }
+        }
+        else
+        {
+            await Load();
+        }
+    }
+
+}

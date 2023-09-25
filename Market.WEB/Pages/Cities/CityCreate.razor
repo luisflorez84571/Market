@@ -1,0 +1,30 @@
+﻿@page "/cities/create"
+@using Market.Shared.Entities;
+@inject IRepository repository
+@inject NavigationManager navigationManager
+@inject SweetAlertService sweetAlertService
+
+<h3>Crear Ciudad</h3>
+
+<CityForm @ref="cityForm" City="city" OnSubmit="Create" ReturnAction="Return" />
+
+@code {
+    private City city = new();
+    private const string Uri = "/cities";
+    private CityForm? cityForm;
+
+    private async Task Create()
+    {
+        var responseHttp = await repository.Post("/api/cities", city);
+        if (responseHttp.Error)
+        {
+            var message = await responseHttp.GetErrorMessageAsync();
+            await sweetAlertService.FireAsync("Error", message);
+            return;
+        }
+        cityForm!.FormPostedSuccessfully = true;
+        navigationManager.NavigateTo("/cities");
+    }
+
+    private void Return() => navigationManager.NavigateTo(Uri);
+}
